@@ -20,7 +20,7 @@ class MyApp extends StatelessWidget {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
       title: 'Hoop Hop',
-      initialRoute: LoginScreen.screenId,
+      initialRoute: MainScreen.screenId,
       routes: {
         RegistrationScreen.screenId: (context) => RegistrationScreen(),
         MainScreen.screenId : (context) => MainScreen(),

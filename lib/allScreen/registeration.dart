@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:hoophop/allScreen/logingScreen.dart';
 import 'package:hoophop/allScreen/mainScreen.dart';
+import 'package:hoophop/widget/progssesDailgo.dart';
 
 class RegistrationScreen extends StatelessWidget {
   static const String screenId = 'RegistrationScreen';
@@ -22,7 +23,7 @@ class RegistrationScreen extends StatelessWidget {
               height: 15.0,
             ),
             Image(
-              image: AssetImage('images/logoLogIn.jpg'),
+              image: AssetImage('images/logoLogIn.png'),
               height: 250.0,
               width: 250.0,
               alignment: Alignment.center,
@@ -148,11 +149,19 @@ class RegistrationScreen extends StatelessWidget {
 
 // this method for auth and set to database real time
   void regeisterNewUser(BuildContext context) async {
+    showDialog(
+        context: context,
+        barrierDismissible: false,
+      builder: (context){
+          return ProgssesDailgo(message: 'Loading...');
+      }
+    );
     final User firebaseUser = (await _firebaseAuth
             .createUserWithEmailAndPassword(
                 email: emailTextEditingController.text,
                 password: passWordTextEditingController.text)
             .catchError((ex) {
+      Navigator.pop(context);
       displayTostMessage('Error:' + ex.toString(), context);
     }))
         .user;
@@ -171,6 +180,7 @@ class RegistrationScreen extends StatelessWidget {
       Navigator.pushNamedAndRemoveUntil(
           context, MainScreen.screenId, (route) => false);
     } else {
+      Navigator.pop(context);
       displayTostMessage('some thing went wrong try again', context);
     }
   }

@@ -4,7 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:hoophop/allScreen/mainScreen.dart';
 import 'package:hoophop/allScreen/registeration.dart';
-
+import 'package:hoophop/widget/progssesDailgo.dart';
 class LoginScreen extends StatelessWidget {
   static const String screenId = 'LoginScreen';
   final FirebaseAuth _firebaseAuth = FirebaseAuth.instance;
@@ -22,7 +22,7 @@ class LoginScreen extends StatelessWidget {
               height: 40.0,
             ),
             Image(
-              image: AssetImage('images/logoLogIn.jpg'),
+              image: AssetImage('images/logoLogIn.png'),
               height: 250.0,
               width: 250.0,
               alignment: Alignment.center,
@@ -118,11 +118,19 @@ class LoginScreen extends StatelessWidget {
 
 // for login
   void loginUser(BuildContext context) async {
+    showDialog(
+        context: context,
+        barrierDismissible: false,
+        builder: (context){
+          return ProgssesDailgo(message: 'Loading...');
+        }
+    );
     final User firebaseUser = (await _firebaseAuth
             .signInWithEmailAndPassword(
                 email: emailTextEditingController.text,
                 password: passWordTextEditingController.text)
             .catchError((ex) {
+      Navigator.pop(context);
       displayTostMessage('Error:' + ex.toString(), context);
     }))
         .user;
@@ -139,11 +147,13 @@ class LoginScreen extends StatelessWidget {
               context, MainScreen.screenId, (route) => false);
         } else {
           _firebaseAuth.signOut();
+          Navigator.pop(context);
           displayTostMessage('No record , please create new account', context);
         }
       });
     } else {
       displayTostMessage('some thing went wrong try again', context);
+      Navigator.pop(context);
     }
   }
 
