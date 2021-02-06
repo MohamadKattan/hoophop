@@ -2,7 +2,10 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
+import 'package:hoophop/Assistants/assistantMethod.dart';
+import 'package:hoophop/provider/appData.dart';
 import 'package:hoophop/widget/divider.dart';
+import 'package:provider/provider.dart';
 
 class MainScreen extends StatefulWidget {
   static const String screenId = 'MainScreen';
@@ -21,7 +24,6 @@ class _MainScreenState extends State<MainScreen> {
   );
   Position currentPosition;
   var geolocator = Geolocator();
-
 
   @override
   Widget build(BuildContext context) {
@@ -45,7 +47,8 @@ class _MainScreenState extends State<MainScreen> {
         ),
         child: Drawer(
             child: ListView(children: [
-          Container(height: 165.0,
+          Container(
+              height: 165.0,
               decoration: BoxDecoration(
                 color: Colors.black,
                 boxShadow: [
@@ -79,36 +82,68 @@ class _MainScreenState extends State<MainScreen> {
                   ],
                 )
               ]))),
-
-              ListTile(
-                leading: CircleAvatar(backgroundColor: Colors.black,radius: 15,child: Icon(Icons.history,color: Colors.yellowAccent,)),
-                title: Text('My History '),
-                tileColor: Colors.white,
-              ),
-              DivederWidget(),
-              SizedBox(height: 10,),
-              ListTile(
-                leading: CircleAvatar(backgroundColor: Colors.black,radius: 15,child: Icon(Icons.person,color: Colors.yellowAccent,)),
-                title: Text('My Profile '),
-                tileColor: Colors.white,
-              ),
-              DivederWidget(),
-              SizedBox(height: 10,),
-              ListTile(
-                leading: CircleAvatar(backgroundColor: Colors.black,radius: 15,child: Icon(Icons.info,color: Colors.yellowAccent,)),
-                title: Text('About us '),
-                tileColor: Colors.white,
-              ),
-              DivederWidget(),
-              SizedBox(height: 20),
-              ListTile(
-                leading: CircleAvatar(backgroundColor: Colors.black,radius: 15,child: Icon(Icons.exit_to_app,color: Colors.yellowAccent,)),
-                title: Text('SignOut '),
-                tileColor: Colors.white,
-                subtitle: Text('See you soon',style: TextStyle(color:Colors.grey),),
-              ),
-              DivederWidget(),
-              SizedBox(height: 10,),
+          ListTile(
+            leading: CircleAvatar(
+                backgroundColor: Colors.black,
+                radius: 15,
+                child: Icon(
+                  Icons.history,
+                  color: Colors.yellowAccent,
+                )),
+            title: Text('My History '),
+            tileColor: Colors.white,
+          ),
+          DivederWidget(),
+          SizedBox(
+            height: 10,
+          ),
+          ListTile(
+            leading: CircleAvatar(
+                backgroundColor: Colors.black,
+                radius: 15,
+                child: Icon(
+                  Icons.person,
+                  color: Colors.yellowAccent,
+                )),
+            title: Text('My Profile '),
+            tileColor: Colors.white,
+          ),
+          DivederWidget(),
+          SizedBox(
+            height: 10,
+          ),
+          ListTile(
+            leading: CircleAvatar(
+                backgroundColor: Colors.black,
+                radius: 15,
+                child: Icon(
+                  Icons.info,
+                  color: Colors.yellowAccent,
+                )),
+            title: Text('About us '),
+            tileColor: Colors.white,
+          ),
+          DivederWidget(),
+          SizedBox(height: 20),
+          ListTile(
+            leading: CircleAvatar(
+                backgroundColor: Colors.black,
+                radius: 15,
+                child: Icon(
+                  Icons.exit_to_app,
+                  color: Colors.yellowAccent,
+                )),
+            title: Text('SignOut '),
+            tileColor: Colors.white,
+            subtitle: Text(
+              'See you soon',
+              style: TextStyle(color: Colors.grey),
+            ),
+          ),
+          DivederWidget(),
+          SizedBox(
+            height: 10,
+          ),
         ])),
       ),
       body: Stack(
@@ -161,7 +196,7 @@ class _MainScreenState extends State<MainScreen> {
                       height: 10,
                     ),
                     Padding(
-                      padding:  EdgeInsets.only(left: 10,right: 10),
+                      padding: EdgeInsets.only(left: 10, right: 10),
                       child: Container(
                         height: 40,
                         decoration: BoxDecoration(
@@ -186,8 +221,8 @@ class _MainScreenState extends State<MainScreen> {
                             height: 4.0,
                           ),
                           Text('Search drop of',
-                              style:
-                                  TextStyle(color: Colors.black, fontSize: 14.0)),
+                              style: TextStyle(
+                                  color: Colors.black, fontSize: 14.0)),
                         ]),
                       ),
                     ),
@@ -205,7 +240,11 @@ class _MainScreenState extends State<MainScreen> {
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              Text('Add home',
+                              Text(
+                                  Provider.of<AppData>(context).pickUpLoction != null
+                                      ? Provider.of<AppData>(context)
+                                          .pickUpLoction.placeName
+                                      : 'Add home',
                                   style: TextStyle(
                                       color: Colors.black, fontSize: 16.0)),
                               Text('your address home',
@@ -263,12 +302,17 @@ class _MainScreenState extends State<MainScreen> {
   }
 
   // this method for get current position
-  void loctedPostion()async{
-
-    Position position = await Geolocator.getCurrentPosition(desiredAccuracy: LocationAccuracy.high);
+  void loctedPostion() async {
+    Position position = await Geolocator.getCurrentPosition(
+        desiredAccuracy: LocationAccuracy.high);
     currentPosition = position;
-    LatLng latLngPosition = LatLng(position.latitude,position.longitude);
-    CameraPosition cameraPosition = CameraPosition(target: latLngPosition,zoom: 14.0);
-    newGoogleMapController.animateCamera(CameraUpdate.newCameraPosition(cameraPosition));
+    LatLng latLngPosition = LatLng(position.latitude, position.longitude);
+    CameraPosition cameraPosition =
+        CameraPosition(target: latLngPosition, zoom: 14.0);
+    newGoogleMapController
+        .animateCamera(CameraUpdate.newCameraPosition(cameraPosition));
+    String address =
+        await AssistantMethod.searchCoordinateAddress(position, context);
+    print(address);
   }
 }
