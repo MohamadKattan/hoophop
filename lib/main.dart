@@ -4,6 +4,7 @@ import 'package:flutter/services.dart';
 import 'package:hoophop/allScreen/logingScreen.dart';
 import 'package:hoophop/allScreen/mainScreen.dart';
 import 'package:hoophop/allScreen/registeration.dart';
+import 'package:hoophop/allScreen/searchScreen.dart';
 import 'package:hoophop/provider/appData.dart';
 import 'package:provider/provider.dart';
 
@@ -29,6 +30,7 @@ class MyApp extends StatelessWidget {
           RegistrationScreen.screenId: (context) => RegistrationScreen(),
           MainScreen.screenId: (context) => MainScreen(),
           LoginScreen.screenId: (context) => LoginScreen(),
+          SearchScreen.screenId: (context) => SearchScreen(),
         },
       ),
     );

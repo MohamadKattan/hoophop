@@ -1,4 +1,4 @@
-// this class for save data after got position to gecoding
+// this class for save data after got position to gecoding api
 class Address {
   String placeFormattedAddress;
   String placeName;

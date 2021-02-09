@@ -1,11 +1,17 @@
-// this class for listing to chancing data gecoding
+// this class for listing to chancing data gecoding in Assistants method
 import 'package:flutter/cupertino.dart';
 import 'package:hoophop/modle/address.dart';
 
 class AppData extends ChangeNotifier {
-  Address pickUpLoction;
+  Address pickUpLocation, dropOffLocation;
+
   void updatePickUpLocation(Address pickUPAddress) {
-    pickUpLoction = pickUPAddress;
+    pickUpLocation = pickUPAddress;
+    notifyListeners();
+  }
+
+  void updateDropOffLocation(Address dropOffAddress) {
+    pickUpLocation = dropOffAddress;
     notifyListeners();
   }
 }

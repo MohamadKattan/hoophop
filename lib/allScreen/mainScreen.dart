@@ -3,8 +3,10 @@ import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:hoophop/Assistants/assistantMethod.dart';
+import 'package:hoophop/allScreen/searchScreen.dart';
 import 'package:hoophop/provider/appData.dart';
 import 'package:hoophop/widget/divider.dart';
+import 'package:hoophop/widget/progssesDailgo.dart';
 import 'package:provider/provider.dart';
 
 class MainScreen extends StatefulWidget {
@@ -195,35 +197,44 @@ class _MainScreenState extends State<MainScreen> {
                     SizedBox(
                       height: 10,
                     ),
-                    Padding(
-                      padding: EdgeInsets.only(left: 10, right: 10),
-                      child: Container(
-                        height: 40,
-                        decoration: BoxDecoration(
-                          color: Colors.white,
-                          borderRadius: BorderRadius.only(
-                              topRight: Radius.circular(20.0),
-                              topLeft: Radius.circular(20.0)),
-                          boxShadow: [
-                            BoxShadow(
-                                color: Colors.black,
-                                blurRadius: 16.0,
-                                spreadRadius: 0.5,
-                                offset: Offset(0.7, 0.7)),
-                          ],
+                    GestureDetector(
+                      onTap: () async {
+                        var res = await Navigator.pushNamed(
+                            context, SearchScreen.screenId);
+                        if (res == "obtainDirection") {
+                          await getPlaceDirection();
+                        }
+                      },
+                      child: Padding(
+                        padding: EdgeInsets.only(left: 10, right: 10),
+                        child: Container(
+                          height: 40,
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            borderRadius: BorderRadius.only(
+                                topRight: Radius.circular(20.0),
+                                topLeft: Radius.circular(20.0)),
+                            boxShadow: [
+                              BoxShadow(
+                                  color: Colors.black,
+                                  blurRadius: 16.0,
+                                  spreadRadius: 0.5,
+                                  offset: Offset(0.7, 0.7)),
+                            ],
+                          ),
+                          child: Row(children: [
+                            Icon(
+                              Icons.search,
+                              color: Colors.grey,
+                            ),
+                            SizedBox(
+                              height: 4.0,
+                            ),
+                            Text('Search drop of',
+                                style: TextStyle(
+                                    color: Colors.black, fontSize: 14.0)),
+                          ]),
                         ),
-                        child: Row(children: [
-                          Icon(
-                            Icons.search,
-                            color: Colors.grey,
-                          ),
-                          SizedBox(
-                            height: 4.0,
-                          ),
-                          Text('Search drop of',
-                              style: TextStyle(
-                                  color: Colors.black, fontSize: 14.0)),
-                        ]),
                       ),
                     ),
                     SizedBox(
@@ -241,9 +252,12 @@ class _MainScreenState extends State<MainScreen> {
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               Text(
-                                  Provider.of<AppData>(context).pickUpLoction != null
+                                  Provider.of<AppData>(context)
+                                              .pickUpLocation !=
+                                          null
                                       ? Provider.of<AppData>(context)
-                                          .pickUpLoction.placeName
+                                          .pickUpLocation
+                                          .placeName
                                       : 'Add home',
                                   style: TextStyle(
                                       color: Colors.black, fontSize: 16.0)),
@@ -314,5 +328,28 @@ class _MainScreenState extends State<MainScreen> {
     String address =
         await AssistantMethod.searchCoordinateAddress(position, context);
     print(address);
+  }
+
+  // this method for got current + drop off location by (Direction Api) . step 2 for starting drawing line between two address
+  Future<void> getPlaceDirection() async {
+    var intialPos = Provider.of<AppData>(context, listen: false)
+        .pickUpLocation; //current place
+    var finalPos = Provider.of<AppData>(context, listen: false)
+        .dropOffLocation; //current place
+    var pickUpLating = LatLng(intialPos.latitude,
+        intialPos.longitude); // longitude&&latitude off pickUpLocation
+    var dropOffLating = LatLng(finalPos.latitude,
+        finalPos.longitude); // longitude&&latitude off drrop off
+    showDialog(
+        context: context,
+        builder: (BuildContext context) {
+          return ProgssesDailgo(
+            message: "Please wait",
+          );
+        });
+    var details = await AssistantMethod.obtainPlaceDirctionDiatels(
+        pickUpLating, dropOffLating);
+    Navigator.pop(context);
+    print("getPlaceDirection::" + details.encodedPoints);
   }
 }

@@ -1,13 +1,16 @@
 //this class for got current position from geolocatre and use with json jecoding
 import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart';
+import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:hoophop/Assistants/requestAssistant.dart';
 import 'package:hoophop/configMap.dart';
 import 'package:hoophop/modle/address.dart';
+import 'package:hoophop/modle/directionDetails.dart';
 import 'package:hoophop/provider/appData.dart';
 import 'package:provider/provider.dart';
 
 class AssistantMethod {
+  // this method for got current location
   static Future<String> searchCoordinateAddress(
       Position position, BuildContext context) async {
     String placeAddress = '';
@@ -21,10 +24,9 @@ class AssistantMethod {
       // use jeson
       st1 = response["results"][0]["address_components"][3]["long_name"];
       st2 = response["results"][0]["address_components"][4]["long_name"];
-      st2 = response["results"][0]["address_components"][5]["long_name"];
-      st2 = response["results"][0]["address_components"][6]["long_name"];
-      placeAddress = st1 + "," + st2 + "," + st3 + "," + st4;
-      // now save data in modle Address
+      st3 = response["results"][0]["address_components"][1]["long_name"];
+      st4 = response["results"][0]["address_components"][6]["long_name"];
+      placeAddress = '${st1 + "," + st2 + "," + st3 + "," + st4}';
       Address pickUpUserAddress = Address();
       pickUpUserAddress.longitude = position.longitude;
       pickUpUserAddress.latitude = position.latitude;
@@ -34,5 +36,29 @@ class AssistantMethod {
           .updatePickUpLocation(pickUpUserAddress);
     }
     return placeAddress; // address ready for use in google map
+  }
+
+  // this method for got current + drop off location by (Direction Api) .First step for starting drawing line between two address
+  static Future<DirectionDetails> obtainPlaceDirctionDiatels(
+      LatLng initialPosition, LatLng finalPosition) async {
+    String dirtionUrl =
+        "https://maps.googleapis.com/maps/api/directions/json?origin=${initialPosition.latitude},${initialPosition.longitude}&destination=${finalPosition.latitude},${finalPosition.longitude} &key=$mapKey";
+    var res = await RequestAssistant.getRequest(dirtionUrl);
+    if (res == "failed") {
+      return null;
+    } else {
+      DirectionDetails directionDetails = DirectionDetails();
+      directionDetails.encodedPoints =
+          res["routes"][0]["overview_polyline"]["points"];
+      directionDetails.durationValue =
+          res["routes"][0]["legs"][0]["duration"]["value"];
+      directionDetails.durationValue =
+          res["routes"][0]["legs"][0]["duration"]["text"];
+      directionDetails.durationValue =
+          res["routes"][0]["legs"][0]["distance"]["value"];
+      directionDetails.durationValue =
+          res["routes"][0]["legs"][0]["distance"]["text"];
+      return directionDetails;
+    }
   }
 }
