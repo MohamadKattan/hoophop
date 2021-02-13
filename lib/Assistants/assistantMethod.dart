@@ -10,7 +10,7 @@ import 'package:hoophop/provider/appData.dart';
 import 'package:provider/provider.dart';
 
 class AssistantMethod {
-  // this method for got current location
+  // this method for got current location for user
   static Future<String> searchCoordinateAddress(
       Position position, BuildContext context) async {
     String placeAddress = '';
@@ -44,21 +44,32 @@ class AssistantMethod {
     String dirtionUrl =
         "https://maps.googleapis.com/maps/api/directions/json?origin=${initialPosition.latitude},${initialPosition.longitude}&destination=${finalPosition.latitude},${finalPosition.longitude} &key=$mapKey";
     var res = await RequestAssistant.getRequest(dirtionUrl);
+
     if (res == "failed") {
       return null;
-    } else {
-      DirectionDetails directionDetails = DirectionDetails();
-      directionDetails.encodedPoints =
-          res["routes"][0]["overview_polyline"]["points"];
-      directionDetails.durationValue =
-          res["routes"][0]["legs"][0]["duration"]["value"];
-      directionDetails.durationValue =
-          res["routes"][0]["legs"][0]["duration"]["text"];
-      directionDetails.durationValue =
-          res["routes"][0]["legs"][0]["distance"]["value"];
-      directionDetails.durationValue =
-          res["routes"][0]["legs"][0]["distance"]["text"];
-      return directionDetails;
     }
+
+    DirectionDetails directionDetails = DirectionDetails();
+    directionDetails.encodedPoints =
+        res["routes"][0]["overview_polyline"]["points"];
+    directionDetails.distanceText =
+        res["routes"][0]["legs"][0]["distance"]["text"];
+    directionDetails.distanceValue =
+        res["routes"][0]["legs"][0]["distance"]["value"];
+    directionDetails.durationText =
+        res["routes"][0]["legs"][0]["duration"]["text"];
+    directionDetails.durationValue =
+        res["routes"][0]["legs"][0]["duration"]["value"];
+
+    return directionDetails;
   }
+
+  // this method for calcutta money for trip by use time and distance
+static int calcuttaFares(DirectionDetails directionDetails){
+    double timeTravelFare = (directionDetails.durationValue/60)*0.20;
+    double distanceTravelFare = (directionDetails.distanceValue/1000)*0.20;
+    double totalFareAmount = timeTravelFare+distanceTravelFare;
+    return totalFareAmount.truncate();
+}
+
 }
