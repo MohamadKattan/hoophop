@@ -1,13 +1,22 @@
 //this class for got current position from geolocatre and use with json jecoding
+import 'dart:math';
+
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:hoophop/Assistants/requestAssistant.dart';
 import 'package:hoophop/configMap.dart';
 import 'package:hoophop/modle/address.dart';
+import 'package:hoophop/modle/allUsers.dart';
 import 'package:hoophop/modle/directionDetails.dart';
 import 'package:hoophop/provider/appData.dart';
 import 'package:provider/provider.dart';
+
+// for insta auth and start get current user
+User firebaseUser;
+Users userCurrentInfo;
 
 class AssistantMethod {
   // this method for got current location for user
@@ -65,11 +74,33 @@ class AssistantMethod {
   }
 
   // this method for calcutta money for trip by use time and distance
-static int calcuttaFares(DirectionDetails directionDetails){
-    double timeTravelFare = (directionDetails.durationValue/60)*0.20;
-    double distanceTravelFare = (directionDetails.distanceValue/1000)*0.20;
-    double totalFareAmount = timeTravelFare+distanceTravelFare;
+  static int calcuttaFares(DirectionDetails directionDetails) {
+    double timeTravelFare = (directionDetails.durationValue / 60) * 0.20;
+    double distanceTravelFare = (directionDetails.distanceValue / 1000) * 0.20;
+    double totalFareAmount = timeTravelFare + distanceTravelFare;
     return totalFareAmount.truncate();
-}
+  }
 
+// this method for got current user id after finish login for set user id
+  static void getCurrentonlineUserInfo(BuildContext context) async {
+    firebaseUser = await FirebaseAuth.instance.currentUser;
+    String userId = firebaseUser.uid;
+    DatabaseReference reference =
+        FirebaseDatabase.instance.reference().child("users").child(userId);
+
+    // after set current user id now we can got info user
+        reference.once().then((DataSnapshot dataSnapshot){
+          if(dataSnapshot.value!=null){
+           userCurrentInfo = Users.fromDataSnapshot(dataSnapshot);
+          }
+
+        });
+
+  }
+  // this method for cerat random number
+static double creatRandomNumber(int num){
+ var ran = Random();
+ int random = ran.nextInt(num);
+ return random.toDouble();
+ }
 }

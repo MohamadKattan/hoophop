@@ -1,13 +1,20 @@
 import 'dart:async';
 import 'package:animated_text_kit/animated_text_kit.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_geofire/flutter_geofire.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:hoophop/Assistants/assistantMethod.dart';
+import 'package:hoophop/Assistants/geoFireassistant.dart';
+import 'package:hoophop/allScreen/logingScreen.dart';
 import 'package:hoophop/allScreen/searchScreen.dart';
+import 'package:hoophop/modle/allUsers.dart';
 import 'package:hoophop/modle/directionDetails.dart';
+import 'package:hoophop/modle/nearbyAvilbleDriver.dart';
 import 'package:hoophop/provider/appData.dart';
 import 'package:hoophop/widget/divider.dart';
 import 'package:hoophop/widget/progssesDailgo.dart';
@@ -45,6 +52,21 @@ class _MainScreenState extends State<MainScreen> with TickerProviderStateMixin {
   double textContainerFindAdriver = 0.0;
 
   DirectionDetails tripDirectionDetails;
+
+  DatabaseReference riderRequestRef;
+  Users _users = Users();
+
+  bool isdriverlocded = false;
+
+
+
+  @override
+  void initState() {
+    // TODO: implement initState
+    super.initState();
+    AssistantMethod.getCurrentonlineUserInfo(context);
+  }
+
 
   @override
   Widget build(BuildContext context) {
@@ -97,7 +119,7 @@ class _MainScreenState extends State<MainScreen> with TickerProviderStateMixin {
                       style:
                           TextStyle(color: Colors.yellowAccent, fontSize: 16),
                     ),
-                    Text('Mohamad Kattan',
+                    Text("mohamad",
                         style:
                             TextStyle(color: Colors.yellowAccent, fontSize: 14))
                   ],
@@ -146,19 +168,22 @@ class _MainScreenState extends State<MainScreen> with TickerProviderStateMixin {
           ),
           DivederWidget(),
           SizedBox(height: 20),
-          ListTile(
-            leading: CircleAvatar(
-                backgroundColor: Colors.black,
-                radius: 15,
-                child: Icon(
-                  Icons.exit_to_app,
-                  color: Colors.yellowAccent,
-                )),
-            title: Text('SignOut '),
-            tileColor: Colors.white,
-            subtitle: Text(
-              'See you soon',
-              style: TextStyle(color: Colors.grey),
+          GestureDetector(
+            onTap: ()=>singOut(),
+            child: ListTile(
+              leading: CircleAvatar(
+                  backgroundColor: Colors.black,
+                  radius: 15,
+                  child: Icon(
+                    Icons.exit_to_app,
+                    color: Colors.yellowAccent,
+                  )),
+              title: Text('SignOut '),
+              tileColor: Colors.white,
+              subtitle: Text(
+                'See you soon',
+                style: TextStyle(color: Colors.grey),
+              ),
             ),
           ),
           DivederWidget(),
@@ -529,22 +554,28 @@ class _MainScreenState extends State<MainScreen> with TickerProviderStateMixin {
                     ),
                   ),
                     SizedBox(height: 15.0,),
-                    Container(
-                      height: 60,
-                      width: 60,
-                      decoration: BoxDecoration(
-                          color: Colors.white,
-                          borderRadius: BorderRadius.circular(25.0),
-                          border: Border.all(width: 2.0,color: Colors.black54),
-                          boxShadow: [
-                            BoxShadow(
-                                color: Colors.white,
-                                blurRadius: 6.0,
-                                spreadRadius: 0.5,
-                                offset: Offset(0.7, 0.7))
-                          ]),
-                      child: Icon(Icons.close,size: 25,),
-                      ),
+                    GestureDetector(
+                      onTap:(){
+                        cancleRiderRequest();
+                        restApp();
+                      },
+                      child: Container(
+                        height: 60,
+                        width: 60,
+                        decoration: BoxDecoration(
+                            color: Colors.white,
+                            borderRadius: BorderRadius.circular(25.0),
+                            border: Border.all(width: 2.0,color: Colors.black54),
+                            boxShadow: [
+                              BoxShadow(
+                                  color: Colors.white,
+                                  blurRadius: 6.0,
+                                  spreadRadius: 0.5,
+                                  offset: Offset(0.7, 0.7))
+                            ]),
+                        child: Icon(Icons.close,size: 25,),
+                        ),
+                    ),
                     SizedBox(height: 5.0,),
                     Center(child: Text("Cancel",))
 
@@ -573,6 +604,7 @@ class _MainScreenState extends State<MainScreen> with TickerProviderStateMixin {
     String address =
         await AssistantMethod.searchCoordinateAddress(position, context);
     print(address);
+    initGeoFireListener();
   }
 
   // this method for got current + drop off location by (Direction Api) . step 2 for starting drawing line between two address
@@ -668,13 +700,14 @@ class _MainScreenState extends State<MainScreen> with TickerProviderStateMixin {
       bottonPaddingOfMap = 230.0;
     });
   }
-  // this method for switch wating a deiver OrRequistContainer
+  // this method for switch waiting a driver OrRequistContainer
   void switchIfWatingAdriverOrRequistContainer() async {
     setState(() {
       requistAtexiContainer = 0.0;
     textContainerFindAdriver = 250.0;
 
     });
+    saveRiderRequest();
   }
 
   // This VOID fOR Cancel  order rider
@@ -682,6 +715,7 @@ class _MainScreenState extends State<MainScreen> with TickerProviderStateMixin {
     setState(() {
       addressSearchContainer = 300.0;
       requistAtexiContainer = 0.0;
+      textContainerFindAdriver =0.0;
       bottonPaddingOfMap = 340;
       polylineSet.clear();
       markersSet.clear();
@@ -690,4 +724,114 @@ class _MainScreenState extends State<MainScreen> with TickerProviderStateMixin {
     });
     loctedPostion();
   }
+
+  // this metjod for save rider request info
+void saveRiderRequest(){
+    riderRequestRef =
+    FirebaseDatabase.instance.reference().child("riderRequest").push();
+    var pickup = Provider.of<AppData>(context,listen: false).pickUpLocation;
+    var dropOff = Provider.of<AppData>(context,listen: false).dropOffLocation;
+    Map riderInfoMap = {
+      "driver_id":"waiting",
+      "payment_method":"cash",
+      "pickUpLat":pickup.latitude.toString(),
+      "pickUpLon":pickup.longitude.toString(),
+     "pickUpName":pickup.placeName,
+      "dropOffLat":dropOff.latitude.toString(),
+      "dropOffLon":dropOff.longitude.toString(),
+      "dropOffName":dropOff.placeName,
+      "riderName":userCurrentInfo.name,
+      "riderPhone":userCurrentInfo.phone,
+      "createAt":DateTime.now().toString(),
+    };
+    riderRequestRef.set(riderInfoMap);
+ }
+
+ // this method for delete riderRequest from database
+void cancleRiderRequest(){
+  riderRequestRef.remove();
+}
+// this method for sing out
+void singOut()async{
+    FirebaseAuth.instance.signOut();
+    Navigator.pushNamedAndRemoveUntil(context, LoginScreen.screenId, (route) => false);
+
+ }
+
+// this method for rider see driver who is close to him
+void initGeoFireListener(){
+  Geofire.initialize("availableDrivers");
+//rider currentPosition
+  Geofire.queryAtLocation(currentPosition.latitude, currentPosition.longitude, 5).listen ((map) {
+    print(map);
+    if (map != null) {
+      var callBack = map['callBack'];
+
+
+// this switch for got driver currentPosition close to rider
+      switch (callBack) {
+        case Geofire.onKeyEntered:
+          NearByAvilbleDriver nearByAvilbleDriver = NearByAvilbleDriver();
+
+          nearByAvilbleDriver.key = map["key"];
+          nearByAvilbleDriver.latitude = map["latitude"];
+          nearByAvilbleDriver.longitude = map["longitude"];
+          GeoFireAssistant.nearByAvilbleDriverList.add(nearByAvilbleDriver);
+          if(isdriverlocded == true){
+            updataAvilbleDriversOnMap();
+          }
+
+          break;
+
+        case Geofire.onKeyExited:
+          GeoFireAssistant.removeDriverFromList(map["key"]);
+          updataAvilbleDriversOnMap();
+
+          break;
+
+        case Geofire.onKeyMoved:
+        // Update your key's location
+          NearByAvilbleDriver nearByAvilbleDriver = NearByAvilbleDriver();
+
+          nearByAvilbleDriver.key = map["key"];
+          nearByAvilbleDriver.latitude = map["latitude"];
+          nearByAvilbleDriver.longitude = map["longitude"];
+          GeoFireAssistant.updataDriverLoction(nearByAvilbleDriver);
+          updataAvilbleDriversOnMap();
+          break;
+
+        case Geofire.onGeoQueryReady:
+          updataAvilbleDriversOnMap();
+
+          break;
+      }
+    }
+
+    setState(() {});
+
+
+  });
+
+}
+// this method when got drivers close to rider it will show markers on map
+ void updataAvilbleDriversOnMap(){
+   setState(() {
+     markersSet.clear();
+   });
+  Set <Marker> tMarker = Set<Marker>();
+  for(NearByAvilbleDriver driver in GeoFireAssistant.nearByAvilbleDriverList){
+    LatLng driverAvaiablePosition = LatLng(driver.latitude, driver.longitude);
+    Marker marker = Marker(
+      markerId: MarkerId("driver${driver.key}"),
+      position: driverAvaiablePosition,
+      icon: BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueOrange),
+      rotation: AssistantMethod.creatRandomNumber(360),
+    );
+    tMarker.add(marker);
+   }
+  setState(() {
+    markersSet = tMarker;
+  });
+ }
+
 }

@@ -4,15 +4,20 @@ import 'package:flutter/material.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:hoophop/allScreen/logingScreen.dart';
 import 'package:hoophop/allScreen/mainScreen.dart';
+import 'package:hoophop/modle/allUsers.dart';
 import 'package:hoophop/widget/progssesDailgo.dart';
+import 'package:provider/provider.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class RegistrationScreen extends StatelessWidget {
+  RegistrationScreen({Key key}) : super(key: key);
   static const String screenId = 'RegistrationScreen';
   final FirebaseAuth _firebaseAuth = FirebaseAuth.instance;
   TextEditingController nameTextEditingController = TextEditingController();
   TextEditingController phoneTextEditingController = TextEditingController();
   TextEditingController emailTextEditingController = TextEditingController();
   TextEditingController passWordTextEditingController = TextEditingController();
+  Future<SharedPreferences> _prefs = SharedPreferences.getInstance();
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -146,7 +151,7 @@ class RegistrationScreen extends StatelessWidget {
       regeisterNewUser(context);
     }
   }
-
+  Users _users = Users();
 // this method for auth and set to database real time
   void regeisterNewUser(BuildContext context) async {
     showDialog(
