@@ -1,6 +1,7 @@
 //this class for got current position from geolocatre and use with json jecoding
+import 'dart:convert';
 import 'dart:math';
-
+import 'package:http/http.dart' as http;
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/material.dart';
@@ -103,4 +104,40 @@ static double creatRandomNumber(int num){
  int random = ran.nextInt(num);
  return random.toDouble();
  }
+
+ // this method for diplay notifiction
+  static sendNotificationToDriver(String token,context,String ride_request_id)async{
+    var destination = Provider.of<AppData>(context,listen: false).dropOffLocation;
+    Map<String,String> headerMap=
+    {
+      'Content-Type': 'application/json',
+      'Authorization': serverToken,
+    };
+    Map notificationMap=
+    {
+      'body': 'DropOff address : ${destination.placeName}',
+      'title': 'New ride request'
+    };
+    Map dataMap =
+    {
+      'click_action': 'FLUTTER_NOTIFICATION_CLICK',
+      'id': '1',
+      'status': 'done',
+      'ride_request_id': ride_request_id,
+    };
+
+    Map sendNotificationMap =
+    {
+      'notification':notificationMap,
+      'data' : dataMap,
+      'priority': 'high',
+      'to': token
+    };
+
+    var res = await http.post(
+        'https://fcm.googleapis.com/fcm/send',
+        headers: headerMap,
+        body: jsonEncode(sendNotificationMap)
+    );
+  }
 }
